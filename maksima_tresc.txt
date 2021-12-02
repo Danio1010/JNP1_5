@@ -1,0 +1,158 @@
+=== Zadanie Maksima ===
+
+W tym zadaniu należy zaimplementować wzorzec klasy
+
+template<typename A, typename V> class FunctionMaxima;
+
+służącej do operacji na funkcji, której dziedziną jest pewien zbiór obiektów
+typu A. Funkcja przyporządkowuje każdemu elementowi dziedziny wartość typu V.
+Od typu A (odpowiednio V) wymagamy, aby możliwe było porównanie x < y,
+gdzie x i y są typu A (odpowiednio V).
+
+Powiemy, że x jest lokalnym maksimum funkcji f, gdy spełnione są dwa warunki:
+1) x jest najmniejszym (względem <) elementem dziedziny funkcji f lub
+   f(x) nie jest mniejsze niż f(l), gdzie l jest największym elementem
+   elementem dziedziny f, takim że l < x.
+2) x jest największym (względem <) elementem dziedziny funkcji f lub
+   f(x) nie jest mniejsze niż f(r), gdzie r jest najmniejszym elementem
+   dziedziny f, takim że x < r.
+
+Dodatkową funkcjonalnością klasy FunctionMaxima<A, V> ma być szybki
+dostęp do lokalnych maksimów reprezentowanej aktualnie funkcji.
+
+Niech n oznacza aktualną wielkość dziedziny funkcji.
+Oczekujemy następujących składowych klasy:
+
+* Konstruktor bezparametrowy (tworzy funkcję o pustej  dziedzinie),
+  konstruktor kopiujący i operator=. Dwa ostatnie powinny mieć
+  sensowne działanie.
+
+* // Zwraca wartość w punkcie a, rzuca wyjątek InvalidArg, jeśli a nie
+  // należy do dziedziny funkcji. Złożoność najwyżej O(log n).
+  V const& value_at(A const& a) const;
+
+* // Zmienia funkcję tak, żeby zachodziło f(a) = v. Jeśli a nie należy do
+  // obecnej dziedziny funkcji, jest do niej dodawany. Najwyżej O(log n).
+  void set_value(A const& a, V const& v);
+
+* // Usuwa a z dziedziny funkcji. Jeśli a nie należało do dziedziny funkcji,
+  // nie dzieje się nic. Złożoność najwyżej O(log n).
+  void erase(A const& a);
+
+* Typ point_type umożliwiający dostęp do „punktów” funkcji, udostępniający
+  następujące funkcje:
+
+    // Zwraca argument funkcji.
+    A const& arg() const;
+
+    // Zwraca wartość funkcji w tym punkcie.
+    V const& value() const;
+
+  Nie powinno być możliwe bezpośrednie konstruowanie obiektów typu
+  point_type, ale zezwalamy na ich kopiowanie i przypisywanie.
+
+* Typ iterator zachowujący się tak jak bidirectional_iterator
+  (http://www.cplusplus.com/reference/iterator/BidirectionalIterator),
+  iterujący po punktach funkcji.
+  Dla zmiennej it typu wyrażenie *it powinno być typu point_type const& ( = const point_type&).
+
+* Metody dające dostęp do punktów funkcji:
+
+  // iterator wskazujący na pierwszy punkt
+  iterator begin() const;
+
+  // iterator wskazujący za ostatni punkt
+  iterator end() const;
+
+  // Iterator, który wskazuje na punkt funkcji o argumencie a lub end(),
+  // jeśli takiego argumentu nie ma w dziedzinie funkcji.
+  iterator find(A const& a) const;
+
+  Powyższe trzy metody powinny działać w czasie nie gorszym niż O(log n).
+  Przejście po wszystkich punktach funkcji (np. w poniższy sposób) powinno
+  odbywać się w czasie O(n), w kolejności rosnących argumentów.
+
+  FunctionMaxima<int, int> F;
+  for (const auto& p : F) {
+    std::cout << p.arg() << " -> " << p.value() << std::endl;
+  }
+
+* Typ mx_iterator zachowujący się znów jak bidirectional_iterator,
+  iterujący po lokalnych maksimach funkcji.
+  Dla zmiennej it typu wyrażenie *it powinno być typu point_type const&.
+
+* Metody dające dostęp do lokalnych maksimów funkcji:
+
+  // iterator wskazujący na pierwsze lokalne maksimum
+  mx_iterator mx_begin() const;
+
+  // iterator wskazujący za ostatnie lokalne maksimum
+  mx_iterator mx_end() const;
+
+  Jeśli przez k oznaczymy rozmiar zbioru lokalnych maksimów, to powyższe
+  metody powinny działać w czasie nie gorszym niż O(log k).
+  Przejście (nieprzeplatane z modyfikacją funkcji) po wszystkich maksimach
+  funkcji powinno odbywać się w czasie O(k), w kolejności malejących wartości.
+  W szczególności oznacza to, że w przypadku funkcji F o niepustej dziedzinie
+  F.mx_begin()->value() jest największą wartością tej funkcji.
+
+  W przypadku takich samych wartości dwóch maksimów, najpierw powinniśmy
+  dotrzeć do punktu o mniejszym argumencie.
+
+* Typ size_type reprezentujący rozmiar dziedziny i funkcja zwracająca ten
+  rozmiar:
+  size_type size() const;
+
+Zakładamy, że
+* klasy A i V mają konstruktory kopiujące;
+* dostępne są:
+  bool operator<(A const& x, A const &y);
+  bool operator<(V const& x, V const &y);
+* w powyższym opisie równość a i b oznacza !(a < b) && !(b < a);
+* generalnie, o porządku < zakładamy to samo, co domyślnie zakłada np. std::set.
+
+Dodatkowo:
+* Wszystkie operacje na funkcji powinny gwarantować silną odporność
+  na wyjątki, a tam gdzie jest to możliwe i pożądane, powinny być no-throw.
+* Klasa powinna być przezroczysta na wyjątki, czyli powinna przepuszczać
+  wszelkie wyjątki zgłaszane przez wywoływane przez nią funkcje i przez
+  operacje na jej składowych.
+* Uznajemy, że argumenty i wartości funkcji mogą być obiektami niemałych
+  rozmiarów. Reprezentacja funkcji powinna zatem utrzymywać jak najmniej
+  kopii argumentów i wartości. W szczególności, dobrze byłoby, aby funkcja
+  będąca kopią innej funkcji współdzieliła z nią argumenty i wartości.
+* Wycieki pamięci są zabronione. :)
+* Klasa InvalidArg powinna dziedziczyć po std::exception.
+
+=== Przykład użycia ===
+
+Załączony program maxima_example.cc powinien się zakończyć się powodzeniem
+oraz wypisać:
+
+invalid argument value
+
+=== Ustalenia techniczne ===
+
+Rozwiązanie będzie kompilowane za pomocą polecenia:
+
+g++ -Og -g -Wall -Wextra -std=c++17
+
+Wycieki pamięci będą sprawdzane programem valgrind wywoływanym z opcjami:
+
+--error-exitcode=123 --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all --track-origins=yes --run-cxx-freeres=yes
+
+Rozwiązanie powinno być zawarte w pliku function_maxima.h, który należy
+umieścić w repozytorium w katalogu
+
+grupaN/zadanie5/ab123456+cd123456
+
+lub
+
+grupaN/zadanie5/ab123456+cd123456+ef123456
+
+gdzie N jest numerem grupy, a ab123456, cd123456, ef123456 są identyfikatorami
+członków zespołu umieszczającego to rozwiązanie. Katalog z rozwiązaniem nie
+powinien zawierać innych plików, ale może zawierać podkatalog prywatne, gdzie
+można umieszczać różne pliki, np. swoje testy. Pliki umieszczone w tym
+podkatalogu nie będą oceniane. Nie wolno umieszczać w repozytorium plików
+dużych, binarnych, tymczasowych (np. *.o) ani innych zbędnych.
